@@ -1,6 +1,6 @@
 // ESモジュールからアイテム、ステージ、エフェクトをインポート
-import { playerInventory } from './items.js';
-import { getCurrentStage, generateEnemyForStage, returnToPreviousStage, advanceToNextStage, setStage } from './stages.js';
+import { playerInventory, calculateDrops } from './items.js';
+import { getCurrentStage, generateEnemyForStage, returnToPreviousStage, advanceToNextStage, setStage, stages } from './stages.js';
 import { effectManager } from './effects.js';
 
 // プレイヤーのステータス
@@ -350,40 +350,46 @@ function handleEnemyDefeat() {
 
 // アイテムドロップ処理
 function handleItemDrop(enemyLevel) {
-    // items.jsからインポートした関数を使用
-    import('./items.js').then(({ calculateDrops }) => {
-        const droppedItem = calculateDrops(enemyLevel);
+    // 簡素なドロップ率計算 (敵のレベルが高いほどドロップ率が上がる)
+    const dropRate = 0.3 + (enemyLevel * 0.01); // 基本30%にレベルごとに1%ずつ上昇
+    
+    if (Math.random() > dropRate) {
+        // ドロップなし
+        return;
+    }
+    
+    // アイテムドロップ - 直接items.jsからimportせずに同期的に処理
+    const droppedItem = calculateDrops(enemyLevel);
+    
+    if (droppedItem) {
+        // アイテムドロップウィンドウを表示
+        const itemDropWindow = document.getElementById('item-drop-window');
+        const droppedItemImg = document.getElementById('dropped-item-img');
+        const droppedItemName = document.getElementById('dropped-item-name');
+        const droppedItemDesc = document.getElementById('dropped-item-description');
         
-        if (droppedItem) {
-            // アイテムドロップウィンドウを表示
-            const itemDropWindow = document.getElementById('item-drop-window');
-            const droppedItemImg = document.getElementById('dropped-item-img');
-            const droppedItemName = document.getElementById('dropped-item-name');
-            const droppedItemDesc = document.getElementById('dropped-item-description');
+        droppedItemImg.src = droppedItem.imgSrc;
+        droppedItemName.textContent = droppedItem.name;
+        droppedItemDesc.textContent = droppedItem.description;
+        
+        itemDropWindow.classList.remove('hidden');
+        
+        // 拾うボタンのイベントリスナー
+        document.getElementById('pickup-item').onclick = () => {
+            playerInventory.addItem(droppedItem);
+            itemDropWindow.classList.add('hidden');
             
-            droppedItemImg.src = droppedItem.imgSrc;
-            droppedItemName.textContent = droppedItem.name;
-            droppedItemDesc.textContent = droppedItem.description;
+            // アイテム獲得エフェクト
+            const rect = droppedItemImg.getBoundingClientRect();
+            effectManager.createItemEffect(
+                rect.left + rect.width / 2, 
+                rect.top + rect.height / 2, 
+                document.getElementById('effect-container')
+            );
             
-            itemDropWindow.classList.remove('hidden');
-            
-            // 拾うボタンのイベントリスナー
-            document.getElementById('pickup-item').onclick = () => {
-                playerInventory.addItem(droppedItem);
-                itemDropWindow.classList.add('hidden');
-                
-                // アイテム獲得エフェクト
-                const rect = droppedItemImg.getBoundingClientRect();
-                effectManager.createItemEffect(
-                    rect.left + rect.width / 2, 
-                    rect.top + rect.height / 2, 
-                    document.getElementById('effect-container')
-                );
-                
-                displayMessage(`${droppedItem.name}を手に入れた！`);
-            };
-        }
-    });
+            displayMessage(`${droppedItem.name}を手に入れた！`);
+        };
+    }
 }
 
 // インベントリ関連の処理
@@ -605,55 +611,54 @@ function openStageSelect() {
 
 // ステージリストの更新
 function updateStageList() {
-    import('./stages.js').then(({ stages, getCurrentStage }) => {
-        const stagesList = document.getElementById('stages-list');
-        stagesList.innerHTML = '';
+    const stagesList = document.getElementById('stages-list');
+    stagesList.innerHTML = '';
+    
+    const currentStage = getCurrentStage();
+    
+    // stagesモジュールから直接インポートしているため、ここでは同期的に処理できる
+    stages.forEach(stage => {
+        const stageCard = document.createElement('div');
+        stageCard.className = 'stage-card';
         
-        const currentStage = getCurrentStage();
+        // 完了したステージにはクラスを追加
+        if (stage.completed) {
+            stageCard.classList.add('stage-completed');
+        }
         
-        stages.forEach(stage => {
-            const stageCard = document.createElement('div');
-            stageCard.className = 'stage-card';
-            
-            // 完了したステージにはクラスを追加
-            if (stage.completed) {
-                stageCard.classList.add('stage-completed');
+        // 現在のステージにはクラスを追加
+        if (currentStage.id === stage.id) {
+            stageCard.classList.add('current-stage');
+        }
+        
+        // 鍵が必要なステージでまだ開放されていない場合
+        if (stage.requiredKeyLevel > 0 && !stage.completed && !playerInventory.hasKey(stage.requiredKeyLevel)) {
+            stageCard.classList.add('stage-locked');
+        }
+        
+        const stageName = document.createElement('h4');
+        stageName.textContent = stage.name;
+        
+        const stageDesc = document.createElement('p');
+        stageDesc.textContent = stage.description;
+        
+        const stageDifficulty = document.createElement('p');
+        stageDifficulty.textContent = `難易度: ${stage.level}`;
+        
+        stageCard.appendChild(stageName);
+        stageCard.appendChild(stageDesc);
+        stageCard.appendChild(stageDifficulty);
+        
+        // ステージクリックイベント
+        stageCard.addEventListener('click', () => {
+            // ロックされていないステージのみ選択可能
+            if (!stageCard.classList.contains('stage-locked')) {
+                selectStage(stage.id);
+                document.getElementById('stage-window').classList.add('hidden');
             }
-            
-            // 現在のステージにはクラスを追加
-            if (currentStage.id === stage.id) {
-                stageCard.classList.add('current-stage');
-            }
-            
-            // 鍵が必要なステージでまだ開放されていない場合
-            if (stage.requiredKeyLevel > 0 && !stage.completed && !playerInventory.hasKey(stage.requiredKeyLevel)) {
-                stageCard.classList.add('stage-locked');
-            }
-            
-            const stageName = document.createElement('h4');
-            stageName.textContent = stage.name;
-            
-            const stageDesc = document.createElement('p');
-            stageDesc.textContent = stage.description;
-            
-            const stageDifficulty = document.createElement('p');
-            stageDifficulty.textContent = `難易度: ${stage.level}`;
-            
-            stageCard.appendChild(stageName);
-            stageCard.appendChild(stageDesc);
-            stageCard.appendChild(stageDifficulty);
-            
-            // ステージクリックイベント
-            stageCard.addEventListener('click', () => {
-                // ロックされていないステージのみ選択可能
-                if (!stageCard.classList.contains('stage-locked')) {
-                    selectStage(stage.id);
-                    document.getElementById('stage-window').classList.add('hidden');
-                }
-            });
-            
-            stagesList.appendChild(stageCard);
         });
+        
+        stagesList.appendChild(stageCard);
     });
 }
 

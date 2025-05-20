@@ -188,7 +188,7 @@ const valuables = [
 function calculateDrops(enemyLevel) {
     // 基本ドロップ率
     const dropRates = {
-        key: 0.1,        // 10%
+        key: 0.05,       // 5%
         consumable: 0.6, // 60%
         weapon: 0.15,    // 15%
         shield: 0.15     // 15%
@@ -209,16 +209,17 @@ function calculateDrops(enemyLevel) {
     }
     
     // レアリティの決定（敵レベルに基づく）
+    // レア度が上がるごとに確率が下がる
     let rarityChances;
     
     if (enemyLevel < 5) {
-        rarityChances = [0.7, 0.25, 0.05, 0, 0]; // レアリティ1: 70%, 2: 25%, 3: 5%
+        rarityChances = [0.7, 0.25, 0.04, 0.009, 0.001]; // レアリティ1: 70%, 2: 25%, 3: 4%, 4: 0.9%, 5: 0.1%
     } else if (enemyLevel < 10) {
-        rarityChances = [0.4, 0.4, 0.15, 0.05, 0]; // レアリティ1: 40%, 2: 40%, 3: 15%, 4: 5%
+        rarityChances = [0.5, 0.35, 0.1, 0.04, 0.01]; // レアリティ1: 50%, 2: 35%, 3: 10%, 4: 4%, 5: 1%
     } else if (enemyLevel < 15) {
-        rarityChances = [0.2, 0.3, 0.3, 0.15, 0.05]; // レアリティ1: 20%, 2: 30%, 3: 30%, 4: 15%, 5: 5%
+        rarityChances = [0.3, 0.4, 0.2, 0.08, 0.02]; // レアリティ1: 30%, 2: 40%, 3: 20%, 4: 8%, 5: 2%
     } else {
-        rarityChances = [0.1, 0.2, 0.3, 0.3, 0.1]; // レアリティ1: 10%, 2: 20%, 3: 30%, 4: 30%, 5: 10%
+        rarityChances = [0.2, 0.3, 0.3, 0.15, 0.05]; // レアリティ1: 20%, 2: 30%, 3: 30%, 4: 15%, 5: 5%
     }
     
     const rarityRoll = Math.random();
