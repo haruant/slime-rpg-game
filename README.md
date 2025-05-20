@@ -37,4 +37,10 @@
 - red_slime.svg - レッドスライム
 - king_slime.svg - キングスライム
 - player.svg - プレイヤーキャラクター
-- sword.svg - プレイヤーの剣 
+- sword.svg - プレイヤーの剣
+
+## オンラインでプレイ
+
+以下のリンクからオンラインでゲームをプレイすることができます：
+
+[スライム退治RPGをプレイする](https://haruant.github.io/slime-rpg-game/) 
