@@ -489,31 +489,34 @@ function updateInventoryTab(tabId) {
     
     switch(tabId) {
         case 'weapons':
-            items = playerInventory.weapons;
+            items = playerInventory.getGroupedWeapons();
             equippedItem = playerInventory.equippedWeapon;
             document.getElementById('equipped-weapon').textContent = equippedItem ? equippedItem.name : 'なし';
             break;
         case 'shields':
-            items = playerInventory.shields;
+            items = playerInventory.getGroupedShields();
             equippedItem = playerInventory.equippedShield;
             document.getElementById('equipped-shield').textContent = equippedItem ? equippedItem.name : 'なし';
             break;
         case 'armors':
-            items = playerInventory.armors;
+            items = playerInventory.getGroupedArmors();
             equippedItem = playerInventory.equippedArmor;
             document.getElementById('equipped-armor').textContent = equippedItem ? equippedItem.name : 'なし';
             break;
         case 'consumables':
-            items = playerInventory.consumables;
+            items = playerInventory.getGroupedConsumables();
             break;
         case 'valuables':
-            items = [...playerInventory.valuables];
+            items = [...playerInventory.getGroupedValuables()];
             // 鍵アイテムを追加
-            items = [...items, ...playerInventory.keys];
+            items = [...items, ...playerInventory.getGroupedKeys()];
             break;
     }
     
-    items.forEach(item => {
+    items.forEach(itemGroup => {
+        const item = itemGroup.item;
+        const count = itemGroup.count;
+        
         const itemCard = document.createElement('div');
         itemCard.className = 'item-card';
         
@@ -538,9 +541,17 @@ function updateInventoryTab(tabId) {
         itemRarity.className = `item-rarity rarity-${item.rarity}`;
         itemRarity.textContent = getRarityText(item.rarity);
         
+        // 個数表示を追加
+        const itemCount = document.createElement('div');
+        itemCount.className = 'item-count';
+        if (count > 1) {
+            itemCount.textContent = `×${count}`;
+        }
+        
         itemCard.appendChild(itemImg);
         itemCard.appendChild(itemName);
         itemCard.appendChild(itemRarity);
+        itemCard.appendChild(itemCount);
         
         // アイテムクリックイベント
         itemCard.addEventListener('click', () => {

@@ -295,6 +295,51 @@ class Inventory {
         }
     }
     
+    // アイテムをグループ化して個数を取得
+    getGroupedItems(itemArray) {
+        const groupedItems = [];
+        const itemCounts = {};
+        
+        // アイテムを集計
+        itemArray.forEach(item => {
+            if (!itemCounts[item.id]) {
+                itemCounts[item.id] = {
+                    item: item,
+                    count: 0
+                };
+                groupedItems.push(itemCounts[item.id]);
+            }
+            itemCounts[item.id].count++;
+        });
+        
+        return groupedItems;
+    }
+    
+    // グループ化されたアイテム配列を取得
+    getGroupedWeapons() {
+        return this.getGroupedItems(this.weapons);
+    }
+    
+    getGroupedShields() {
+        return this.getGroupedItems(this.shields);
+    }
+    
+    getGroupedArmors() {
+        return this.getGroupedItems(this.armors);
+    }
+    
+    getGroupedConsumables() {
+        return this.getGroupedItems(this.consumables);
+    }
+    
+    getGroupedValuables() {
+        return this.getGroupedItems(this.valuables);
+    }
+    
+    getGroupedKeys() {
+        return this.getGroupedItems(this.keys);
+    }
+    
     equipWeapon(weaponId) {
         const weapon = this.weapons.find(w => w.id === weaponId);
         if (weapon) {
