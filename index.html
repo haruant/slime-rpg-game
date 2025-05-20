@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>スライム退治RPG</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="status-panel">
+            <div id="player-status">
+                <h2>プレイヤー情報</h2>
+                <p>レベル: <span id="player-level">1</span></p>
+                <p>HP: <span id="player-hp">100</span>/<span id="player-max-hp">100</span></p>
+                <p>攻撃力: <span id="player-attack">10</span></p>
+                <p>経験値: <span id="player-exp">0</span>/<span id="player-next-exp">100</span></p>
+            </div>
+            <div id="enemy-status">
+                <h2>敵情報</h2>
+                <p>名前: <span id="enemy-name">スライム</span></p>
+                <p>HP: <span id="enemy-hp">50</span>/<span id="enemy-max-hp">50</span></p>
+            </div>
+        </div>
+        <div id="battle-screen">
+            <div id="game-field">
+                <div id="player-character">
+                    <img id="player-image" src="images/player.svg" alt="プレイヤー">
+                    <img id="sword-image" src="images/sword.svg" alt="剣" class="hidden">
+                </div>
+                <div id="enemy-container">
+                    <img id="enemy-image" src="images/slime.svg" alt="スライム">
+                </div>
+                <div id="touch-area"></div>
+            </div>
+            <div id="message-log">
+                <p id="battle-message">スライムが現れた！画面をタップして攻撃！</p>
+            </div>
+            <div id="action-buttons">
+                <button id="attack-btn">攻撃</button>
+                <button id="heal-btn">回復</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
