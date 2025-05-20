@@ -617,4 +617,108 @@ button:disabled {
         padding: 5px 8px;
         font-size: 12px;
     }
+}
+
+/* ステージ進行セクション */
+.stage-advancement {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #0f3460;
+    border-radius: 5px;
+}
+
+.stage-advancement h4 {
+    color: #e94560;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#next-stage-info {
+    margin-bottom: 15px;
+}
+
+#next-stage-info p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+#use-key-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #ffc107;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#use-key-btn:hover:not(:disabled) {
+    background-color: #ffca2c;
+}
+
+#use-key-btn:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* ステージクリアウィンドウ */
+#stage-clear-window .window-content {
+    text-align: center;
+}
+
+.stage-clear-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.stage-clear-buttons button {
+    flex: 1;
+    margin: 0 5px;
+}
+
+#continue-current-stage {
+    background-color: #4caf50;
+}
+
+#proceed-next-stage {
+    background-color: #e94560;
+}
+
+/* ステージボタン */
+#stage-select-btn {
+    background-color: #ffc107;
+    color: #1a1a2e;
+}
+
+#stage-select-btn:hover {
+    background-color: #ffca2c;
+}
+
+/* 鍵アイコン */
+.key-item {
+    position: relative;
+}
+
+.key-item::after {
+    content: '🔑';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 14px;
+}
+
+/* アニメーション - 鍵が使われるエフェクト */
+@keyframes keyUsed {
+    0% { transform: rotate(0) scale(1); }
+    50% { transform: rotate(90deg) scale(1.5); }
+    100% { transform: rotate(0) scale(0); opacity: 0; }
+}
+
+.key-used {
+    animation: keyUsed 1s forwards;
 } 

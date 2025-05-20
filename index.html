@@ -55,6 +55,7 @@
                 <button id="attack-btn">攻撃</button>
                 <button id="heal-btn">回復</button>
                 <button id="inventory-btn">アイテム</button>
+                <button id="stage-select-btn">ステージ</button>
             </div>
         </div>
         
@@ -118,6 +119,17 @@
             </div>
             <div class="window-content">
                 <div id="stages-list"></div>
+                
+                <!-- 次のステージへ進むセクション -->
+                <div id="next-stage-section" class="stage-advancement">
+                    <h4>次のステージへ進む</h4>
+                    <div id="next-stage-info">
+                        <p>現在のステージ: <span id="current-stage-name">スライムの森</span></p>
+                        <p>次のステージ: <span id="next-stage-name">洞窟入口</span></p>
+                        <p>必要な鍵: <span id="required-key">銅の鍵</span></p>
+                    </div>
+                    <button id="use-key-btn" disabled>鍵を使う</button>
+                </div>
             </div>
         </div>
         
@@ -130,6 +142,21 @@
                 <p>あなたは倒れてしまった...</p>
                 <p>一つ前のステージから再開します</p>
                 <button id="restart-game">リスタート</button>
+            </div>
+        </div>
+        
+        <!-- ステージクリアウィンドウ -->
+        <div id="stage-clear-window" class="game-window hidden">
+            <div class="window-header">
+                <h3>ステージクリア！</h3>
+            </div>
+            <div class="window-content">
+                <p><span id="cleared-stage-name">スライムの森</span>をクリアしました！</p>
+                <p>次のステージ：<span id="cleared-next-stage">洞窟入口</span></p>
+                <div class="stage-clear-buttons">
+                    <button id="continue-current-stage">このステージを続ける</button>
+                    <button id="proceed-next-stage">次のステージへ</button>
+                </div>
             </div>
         </div>
     </div>

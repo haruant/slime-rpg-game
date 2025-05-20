@@ -461,7 +461,9 @@ function updateInventoryTab(tabId) {
             items = playerInventory.consumables;
             break;
         case 'valuables':
-            items = [...playerInventory.valuables, ...playerInventory.keys];
+            items = [...playerInventory.valuables];
+            // 鍵アイテムを追加
+            items = [...items, ...playerInventory.keys];
             break;
     }
     
@@ -472,6 +474,11 @@ function updateInventoryTab(tabId) {
         // 装備中のアイテムにはクラスを追加
         if (equippedItem && item.id === equippedItem.id) {
             itemCard.classList.add('equipped');
+        }
+        
+        // 鍵アイテムにはクラスを追加
+        if (item.isKey) {
+            itemCard.classList.add('key-item');
         }
         
         const itemImg = document.createElement('img');
@@ -601,12 +608,125 @@ function initStageSelect() {
     
     // ステージ名クリックでステージ選択ウィンドウを開く
     document.getElementById('stage-name').addEventListener('click', openStageSelect);
+    
+    // ステージ選択ボタンでステージ選択ウィンドウを開く
+    document.getElementById('stage-select-btn').addEventListener('click', openStageSelect);
+    
+    // 鍵を使うボタンのイベントリスナー
+    document.getElementById('use-key-btn').addEventListener('click', useKeyForNextStage);
 }
 
 // ステージ選択ウィンドウを開く
 function openStageSelect() {
     document.getElementById('stage-window').classList.remove('hidden');
     updateStageList();
+    updateNextStageInfo();
+}
+
+// 次のステージ情報の更新
+function updateNextStageInfo() {
+    const currentStage = getCurrentStage();
+    
+    // 次のステージがない場合
+    if (!currentStage.nextStageId) {
+        document.getElementById('next-stage-section').classList.add('hidden');
+        return;
+    }
+    
+    document.getElementById('next-stage-section').classList.remove('hidden');
+    
+    // 次のステージ情報を取得
+    const nextStage = getStage(currentStage.nextStageId);
+    
+    // 情報を更新
+    document.getElementById('current-stage-name').textContent = currentStage.name;
+    document.getElementById('next-stage-name').textContent = nextStage.name;
+    
+    // 必要な鍵の情報
+    let keyName = '必要なし';
+    let keyLevelRequired = nextStage.requiredKeyLevel;
+    
+    if (keyLevelRequired > 0) {
+        // 対応する鍵を探す
+        const keyItem = valuables.find(v => v.isKey && v.value === keyLevelRequired);
+        keyName = keyItem ? keyItem.name : `レベル${keyLevelRequired}の鍵`;
+    }
+    
+    document.getElementById('required-key').textContent = keyName;
+    
+    // 鍵を使うボタンの状態を更新
+    const useKeyBtn = document.getElementById('use-key-btn');
+    
+    if (keyLevelRequired === 0) {
+        // 鍵が不要な場合
+        useKeyBtn.disabled = false;
+        useKeyBtn.textContent = '次のステージへ進む';
+    } else if (playerInventory.hasKey(keyLevelRequired)) {
+        // 鍵を持っている場合
+        useKeyBtn.disabled = false;
+        useKeyBtn.textContent = '鍵を使う';
+    } else {
+        // 鍵を持っていない場合
+        useKeyBtn.disabled = true;
+        useKeyBtn.textContent = '鍵を持っていません';
+    }
+}
+
+// 鍵を使って次のステージへ進む
+function useKeyForNextStage() {
+    const currentStage = getCurrentStage();
+    
+    // 次のステージがない場合
+    if (!currentStage.nextStageId) {
+        return;
+    }
+    
+    const nextStage = getStage(currentStage.nextStageId);
+    const keyLevelRequired = nextStage.requiredKeyLevel;
+    
+    // 鍵が必要で、持っていない場合
+    if (keyLevelRequired > 0 && !playerInventory.hasKey(keyLevelRequired)) {
+        displayMessage('次のステージに必要な鍵を持っていません！');
+        return;
+    }
+    
+    // 鍵を使って次のステージへ
+    if (advanceToNextStage(playerInventory)) {
+        // ステージクリアウィンドウを表示
+        showStageClearWindow(currentStage.name, nextStage.name);
+        
+        // ステージ選択ウィンドウを閉じる
+        document.getElementById('stage-window').classList.add('hidden');
+    } else {
+        displayMessage('次のステージに進めませんでした...');
+    }
+}
+
+// ステージクリアウィンドウを表示
+function showStageClearWindow(clearedStageName, nextStageName) {
+    const stageClearWindow = document.getElementById('stage-clear-window');
+    
+    // 情報を更新
+    document.getElementById('cleared-stage-name').textContent = clearedStageName;
+    document.getElementById('cleared-next-stage').textContent = nextStageName;
+    
+    // イベントリスナーを設定
+    document.getElementById('continue-current-stage').onclick = () => {
+        stageClearWindow.classList.add('hidden');
+    };
+    
+    document.getElementById('proceed-next-stage').onclick = () => {
+        stageClearWindow.classList.add('hidden');
+        
+        // ステージ情報の更新
+        updateStageInfo();
+        
+        // 新しい敵を出現
+        spawnEnemy();
+    };
+    
+    // ウィンドウを表示
+    stageClearWindow.classList.remove('hidden');
 }
 
 // ステージリストの更新
