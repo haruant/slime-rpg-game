@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+  <!-- 木の盾 -->
+  <path d="M30,5 L45,15 L45,40 C45,50 30,55 30,55 C30,55 15,50 15,40 L15,15 Z" fill="#8B4513" stroke="#5D2906" stroke-width="2"/>
+  <circle cx="30" cy="25" r="8" fill="#A0522D" stroke="#5D2906" stroke-width="1.5"/>
+  <circle cx="30" cy="25" r="4" fill="#8B4513" stroke="#5D2906" stroke-width="1"/>
+  <!-- 木の模様 -->
+  <line x1="25" y1="15" x2="35" y2="15" stroke="#5D2906" stroke-width="1"/>
+  <line x1="22" y1="35" x2="38" y2="35" stroke="#5D2906" stroke-width="1"/>
+</svg> 

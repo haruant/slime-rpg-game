@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+  <!-- 布の服 -->
+  <path d="M20,10 L40,10 L42,45 C42,45 35,50 30,50 C25,50 18,45 18,45 Z" fill="#D2B48C" stroke="#A89070" stroke-width="1.5"/>
+  
+  <!-- 首元 -->
+  <path d="M25,10 C25,15 35,15 35,10" fill="none" stroke="#A89070" stroke-width="1"/>
+  
+  <!-- 装飾 -->
+  <line x1="20" y1="20" x2="40" y2="20" stroke="#A89070" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="20" y1="30" x2="40" y2="30" stroke="#A89070" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="20" y1="40" x2="40" y2="40" stroke="#A89070" stroke-width="1" stroke-dasharray="2,2"/>
+</svg> 

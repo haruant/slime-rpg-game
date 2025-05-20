@@ -14,34 +14,126 @@
                 <p>レベル: <span id="player-level">1</span></p>
                 <p>HP: <span id="player-hp">100</span>/<span id="player-max-hp">100</span></p>
                 <p>攻撃力: <span id="player-attack">10</span></p>
+                <p>防御力: <span id="player-defense">0</span></p>
                 <p>経験値: <span id="player-exp">0</span>/<span id="player-next-exp">100</span></p>
             </div>
             <div id="enemy-status">
                 <h2>敵情報</h2>
                 <p>名前: <span id="enemy-name">スライム</span></p>
                 <p>HP: <span id="enemy-hp">50</span>/<span id="enemy-max-hp">50</span></p>
+                <p>攻撃力: <span id="enemy-attack">5</span></p>
             </div>
         </div>
+        
+        <div id="stage-info">
+            <h3 id="stage-name">スライムの森</h3>
+            <p id="stage-description">弱いスライムが生息する森。初心者向け。</p>
+        </div>
+        
         <div id="battle-screen">
             <div id="game-field">
+                <div id="background"></div>
                 <div id="player-character">
                     <img id="player-image" src="images/player.svg" alt="プレイヤー">
                     <img id="sword-image" src="images/sword.svg" alt="剣" class="hidden">
                 </div>
                 <div id="enemy-container">
                     <img id="enemy-image" src="images/slime.svg" alt="スライム">
+                    <div id="enemy-hp-bar">
+                        <div id="enemy-hp-fill"></div>
+                    </div>
                 </div>
+                <div id="effect-container"></div>
                 <div id="touch-area"></div>
             </div>
+            
             <div id="message-log">
                 <p id="battle-message">スライムが現れた！画面をタップして攻撃！</p>
             </div>
+            
             <div id="action-buttons">
                 <button id="attack-btn">攻撃</button>
                 <button id="heal-btn">回復</button>
+                <button id="inventory-btn">アイテム</button>
+            </div>
+        </div>
+        
+        <!-- インベントリウィンドウ -->
+        <div id="inventory-window" class="game-window hidden">
+            <div class="window-header">
+                <h3>インベントリ</h3>
+                <button id="close-inventory">×</button>
+            </div>
+            <div class="window-content">
+                <div class="inventory-tabs">
+                    <button class="tab-btn active" data-tab="weapons">武器</button>
+                    <button class="tab-btn" data-tab="shields">盾</button>
+                    <button class="tab-btn" data-tab="armors">防具</button>
+                    <button class="tab-btn" data-tab="consumables">アイテム</button>
+                    <button class="tab-btn" data-tab="valuables">貴重品</button>
+                </div>
+                <div class="inventory-content">
+                    <div id="weapons-tab" class="tab-content active">
+                        <h4>装備中: <span id="equipped-weapon">なし</span></h4>
+                        <div id="weapons-list" class="items-list"></div>
+                    </div>
+                    <div id="shields-tab" class="tab-content">
+                        <h4>装備中: <span id="equipped-shield">なし</span></h4>
+                        <div id="shields-list" class="items-list"></div>
+                    </div>
+                    <div id="armors-tab" class="tab-content">
+                        <h4>装備中: <span id="equipped-armor">なし</span></h4>
+                        <div id="armors-list" class="items-list"></div>
+                    </div>
+                    <div id="consumables-tab" class="tab-content">
+                        <div id="consumables-list" class="items-list"></div>
+                    </div>
+                    <div id="valuables-tab" class="tab-content">
+                        <div id="valuables-list" class="items-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- アイテム獲得ウィンドウ -->
+        <div id="item-drop-window" class="game-window hidden">
+            <div class="window-header">
+                <h3>アイテム獲得！</h3>
+            </div>
+            <div class="window-content">
+                <div id="dropped-item" class="item-detail">
+                    <img id="dropped-item-img" src="" alt="ドロップアイテム">
+                    <h4 id="dropped-item-name"></h4>
+                    <p id="dropped-item-description"></p>
+                </div>
+                <button id="pickup-item">拾う</button>
+            </div>
+        </div>
+        
+        <!-- ステージ切り替えウィンドウ -->
+        <div id="stage-window" class="game-window hidden">
+            <div class="window-header">
+                <h3>ステージ選択</h3>
+                <button id="close-stage">×</button>
+            </div>
+            <div class="window-content">
+                <div id="stages-list"></div>
+            </div>
+        </div>
+        
+        <!-- ゲームオーバーウィンドウ -->
+        <div id="game-over-window" class="game-window hidden">
+            <div class="window-header">
+                <h3>ゲームオーバー</h3>
+            </div>
+            <div class="window-content">
+                <p>あなたは倒れてしまった...</p>
+                <p>一つ前のステージから再開します</p>
+                <button id="restart-game">リスタート</button>
             </div>
         </div>
     </div>
-    <script src="script.js"></script>
+    
+    <script src="script.js" type="module"></script>
 </body>
 </html> 
