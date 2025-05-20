@@ -1,5 +1,5 @@
 // ESモジュールからアイテム、ステージ、エフェクトをインポート
-import { playerInventory, calculateDrops } from './items.js';
+import { playerInventory, calculateDrops, weapons, shields, armors, consumables, valuables } from './items.js';
 import { getCurrentStage, generateEnemyForStage, returnToPreviousStage, advanceToNextStage, setStage, stages } from './stages.js';
 import { effectManager } from './effects.js';
 import { saveGame, loadGame, deleteSaveData, hasSaveData, getSaveDateTime } from './save.js';
@@ -401,33 +401,41 @@ function handleItemDrop(enemyLevel) {
     
     console.log(`ドロップしたアイテム: ${droppedItem.name} (レア度: ${droppedItem.rarity})`);
     
-    // アイテムドロップウィンドウを表示
-    const itemDropWindow = document.getElementById('item-drop-window');
-    const droppedItemImg = document.getElementById('dropped-item-img');
-    const droppedItemName = document.getElementById('dropped-item-name');
-    const droppedItemDesc = document.getElementById('dropped-item-description');
+    // アイテムを自動的に追加
+    playerInventory.addItem(droppedItem);
     
-    droppedItemImg.src = droppedItem.imgSrc;
-    droppedItemName.textContent = droppedItem.name;
-    droppedItemDesc.textContent = droppedItem.description;
+    // アイテム獲得表示を画面中央に表示
+    const messageElement = document.createElement('div');
+    messageElement.className = 'item-pickup-notification';
+    messageElement.innerHTML = `
+        <img src="${droppedItem.imgSrc}" alt="${droppedItem.name}">
+        <div class="item-info">
+            <h4>${droppedItem.name}</h4>
+            <span class="rarity-${droppedItem.rarity}">${getRarityText(droppedItem.rarity)}</span>
+        </div>
+    `;
     
-    itemDropWindow.classList.remove('hidden');
+    // メッセージを画面に追加
+    document.getElementById('effect-container').appendChild(messageElement);
     
-    // 拾うボタンのイベントリスナー
-    document.getElementById('pickup-item').onclick = () => {
-        playerInventory.addItem(droppedItem);
-        itemDropWindow.classList.add('hidden');
-        
-        // アイテム獲得エフェクト
-        const rect = droppedItemImg.getBoundingClientRect();
-        effectManager.createItemEffect(
-            rect.left + rect.width / 2, 
-            rect.top + rect.height / 2, 
-            document.getElementById('effect-container')
-        );
-        
-        displayMessage(`${droppedItem.name}を手に入れた！`);
-    };
+    // アイテム獲得エフェクト
+    const rect = messageElement.getBoundingClientRect();
+    effectManager.createItemEffect(
+        rect.left + rect.width / 2, 
+        rect.top + rect.height / 2, 
+        document.getElementById('effect-container')
+    );
+    
+    // メッセージを表示
+    displayMessage(`${droppedItem.name}を手に入れた！`);
+    
+    // 数秒後に通知を消す
+    setTimeout(() => {
+        messageElement.classList.add('fadeout');
+        setTimeout(() => {
+            messageElement.remove();
+        }, 500);
+    }, 2500);
 }
 
 // インベントリ関連の処理
@@ -969,8 +977,66 @@ function loadSavedGame() {
             stage.completed = saveData.completedStages.includes(stage.id);
         });
         
-        // インベントリの復元処理（簡易版）
-        // 注: 実際の実装では、アイテムIDから実際のアイテムオブジェクトを取得する必要があります
+        // インベントリの復元処理
+        // インベントリをクリア
+        playerInventory.weapons = [];
+        playerInventory.shields = [];
+        playerInventory.armors = [];
+        playerInventory.consumables = [];
+        playerInventory.valuables = [];
+        playerInventory.keys = [];
+        playerInventory.equippedWeapon = null;
+        playerInventory.equippedShield = null;
+        playerInventory.equippedArmor = null;
+        
+        // 武器の復元
+        saveData.inventory.weapons.forEach(weaponId => {
+            const weapon = weapons.find(w => w.id === weaponId);
+            if (weapon) playerInventory.weapons.push(weapon);
+        });
+        
+        // 盾の復元
+        saveData.inventory.shields.forEach(shieldId => {
+            const shield = shields.find(s => s.id === shieldId);
+            if (shield) playerInventory.shields.push(shield);
+        });
+        
+        // 防具の復元
+        saveData.inventory.armors.forEach(armorId => {
+            const armor = armors.find(a => a.id === armorId);
+            if (armor) playerInventory.armors.push(armor);
+        });
+        
+        // 消費アイテムの復元
+        saveData.inventory.consumables.forEach(consumableId => {
+            const consumable = consumables.find(c => c.id === consumableId);
+            if (consumable) playerInventory.consumables.push(consumable);
+        });
+        
+        // 貴重品の復元
+        saveData.inventory.valuables.forEach(valuableId => {
+            const valuable = valuables.find(v => v.id === valuableId && !v.isKey);
+            if (valuable) playerInventory.valuables.push(valuable);
+        });
+        
+        // 鍵の復元
+        saveData.inventory.keys.forEach(keyId => {
+            const key = valuables.find(v => v.id === keyId && v.isKey);
+            if (key) playerInventory.keys.push(key);
+        });
+        
+        // 装備中アイテムの復元
+        if (saveData.inventory.equippedWeapon) {
+            playerInventory.equipWeapon(saveData.inventory.equippedWeapon);
+        }
+        
+        if (saveData.inventory.equippedShield) {
+            playerInventory.equipShield(saveData.inventory.equippedShield);
+        }
+        
+        if (saveData.inventory.equippedArmor) {
+            playerInventory.equipArmor(saveData.inventory.equippedArmor);
+        }
         
         // ゲーム状態の更新
         updatePlayerStatus();
