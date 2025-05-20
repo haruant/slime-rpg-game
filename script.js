@@ -1,3 +1,8 @@
+// ESモジュールからアイテム、ステージ、エフェクトをインポート
+import { playerInventory } from './items.js';
+import { getCurrentStage, generateEnemyForStage, returnToPreviousStage, advanceToNextStage, setStage } from './stages.js';
+import { effectManager } from './effects.js';
+
 // プレイヤーのステータス
 const player = {
     level: 1,
@@ -17,6 +22,14 @@ const player = {
         this.nextExp = Math.floor(this.nextExp * 1.5);
         updatePlayerStatus();
         displayMessage(`レベルアップ！ レベル${this.level}になった！`);
+        
+        // レベルアップエフェクト
+        const playerRect = document.getElementById('player-character').getBoundingClientRect();
+        effectManager.createLevelUpEffect(
+            playerRect.left + playerRect.width / 2, 
+            playerRect.top + playerRect.height / 2, 
+            document.getElementById('effect-container')
+        );
     },
     
     // 経験値獲得処理
@@ -35,6 +48,14 @@ const player = {
         this.hp = Math.min(this.maxHp, this.hp + healAmount);
         updatePlayerStatus();
         displayMessage(`${healAmount}ポイント回復した！`);
+        
+        // 回復エフェクト
+        const playerRect = document.getElementById('player-character').getBoundingClientRect();
+        effectManager.createHealEffect(
+            playerRect.left + playerRect.width / 2, 
+            playerRect.top + playerRect.height / 2, 
+            document.getElementById('effect-container')
+        );
     },
     
     // 剣を振る処理
@@ -48,8 +69,31 @@ const player = {
         // スライムへの攻撃判定
         setTimeout(() => {
             if (currentEnemy) {
+                // 攻撃力の計算（装備アイテムのボーナスを適用）
+                let totalAttack = this.attack;
+                if (playerInventory.equippedWeapon) {
+                    totalAttack += playerInventory.equippedWeapon.attack;
+                }
+                
+                // クリティカルヒット判定
+                let critRate = 0.05; // 基本クリティカル率
+                if (playerInventory.equippedWeapon) {
+                    critRate += playerInventory.equippedWeapon.critRate;
+                }
+                
+                const isCritical = Math.random() < critRate;
+                
                 // プレイヤーの攻撃
-                const playerDamage = Math.max(1, this.attack + Math.floor(Math.random() * 6) - 3);
+                let playerDamage = Math.max(1, totalAttack + Math.floor(Math.random() * 6) - 3);
+                
+                if (isCritical) {
+                    playerDamage = Math.floor(playerDamage * 1.5);
+                    enemyImageElement.classList.add('critical');
+                    setTimeout(() => {
+                        enemyImageElement.classList.remove('critical');
+                    }, 500);
+                }
+                
                 currentEnemy.hp = Math.max(0, currentEnemy.hp - playerDamage);
                 
                 // 敵のダメージアニメーション
@@ -58,8 +102,21 @@ const player = {
                     enemyImageElement.classList.remove('damage');
                 }, 300);
                 
+                // ヒットエフェクト
+                const enemyRect = enemyContainer.getBoundingClientRect();
+                effectManager.createHitEffect(
+                    enemyRect.left + enemyRect.width / 2, 
+                    enemyRect.top + enemyRect.height / 2, 
+                    document.getElementById('effect-container')
+                );
+                
                 updateEnemyStatus();
-                displayMessage(`${currentEnemy.name}に${playerDamage}ダメージを与えた！`);
+                
+                if (isCritical) {
+                    displayMessage(`クリティカルヒット！${currentEnemy.name}に${playerDamage}ダメージを与えた！`);
+                } else {
+                    displayMessage(`${currentEnemy.name}に${playerDamage}ダメージを与えた！`);
+                }
                 
                 // 敵を倒した場合
                 if (currentEnemy.hp <= 0) {
@@ -86,7 +143,7 @@ const player = {
 
 // 敵のクラス
 class Enemy {
-    constructor(name, hp, attack, exp, imageSrc) {
+    constructor(name, hp, attack, exp, imageSrc, level = 1) {
         this.name = name;
         this.maxHp = hp;
         this.hp = hp;
@@ -94,6 +151,7 @@ class Enemy {
         this.exp = exp;
         this.imageSrc = imageSrc;
         this.isAttacking = false;
+        this.level = level;
     }
     
     attackPlayer() {
@@ -106,8 +164,24 @@ class Enemy {
             enemyContainer.classList.remove('enemy-attack');
             this.isAttacking = false;
             
-            const enemyDamage = Math.max(1, this.attack + Math.floor(Math.random() * 4) - 2);
+            // 防御力の計算（装備アイテムのボーナスを適用）
+            let defense = 0;
+            if (playerInventory.equippedShield) {
+                defense += playerInventory.equippedShield.defense;
+            }
+            if (playerInventory.equippedArmor) {
+                defense += playerInventory.equippedArmor.defense;
+            }
+            
+            const enemyDamage = Math.max(1, this.attack - defense + Math.floor(Math.random() * 4) - 2);
             player.hp = Math.max(0, player.hp - enemyDamage);
+            
+            // プレイヤーのダメージアニメーション
+            document.getElementById('player-character').classList.add('damage');
+            setTimeout(() => {
+                document.getElementById('player-character').classList.remove('damage');
+            }, 300);
+            
             updatePlayerStatus();
             
             displayMessage(`${this.name}の攻撃！${enemyDamage}ダメージを受けた！`);
@@ -121,11 +195,38 @@ class Enemy {
 }
 
 // 敵の種類
-const enemyTypes = [
-    new Enemy("スライム", 50, 5, 20, "images/slime.svg"),
-    new Enemy("レッドスライム", 80, 8, 35, "images/red_slime.svg"),
-    new Enemy("キングスライム", 150, 15, 100, "images/king_slime.svg")
-];
+const enemyTypes = {
+    "slime": {
+        constructor: (level) => new Enemy(
+            "スライム", 
+            50 + level * 5, 
+            5 + level, 
+            20 + level * 2, 
+            "images/slime.svg",
+            level
+        )
+    },
+    "red_slime": {
+        constructor: (level) => new Enemy(
+            "レッドスライム", 
+            80 + level * 8, 
+            8 + level * 2, 
+            35 + level * 3, 
+            "images/red_slime.svg",
+            level
+        )
+    },
+    "king_slime": {
+        constructor: (level) => new Enemy(
+            "キングスライム", 
+            150 + level * 15, 
+            15 + level * 3, 
+            100 + level * 5, 
+            "images/king_slime.svg",
+            level
+        )
+    }
+};
 
 let currentEnemy = null;
 
@@ -149,12 +250,27 @@ const healButton = document.getElementById('heal-btn');
 const touchArea = document.getElementById('touch-area');
 const swordImage = document.getElementById('sword-image');
 
+// ステージ情報の更新
+function updateStageInfo() {
+    const currentStage = getCurrentStage();
+    document.getElementById('stage-name').textContent = currentStage.name;
+    document.getElementById('stage-description').textContent = currentStage.description;
+    document.getElementById('background').style.backgroundImage = `url(${currentStage.background})`;
+}
+
 // プレイヤーのステータス更新
 function updatePlayerStatus() {
     playerLevelElement.textContent = player.level;
     playerHpElement.textContent = player.hp;
     playerMaxHpElement.textContent = player.maxHp;
-    playerAttackElement.textContent = player.attack;
+    
+    // 装備アイテムのボーナスを表示に反映
+    let totalAttack = player.attack;
+    if (playerInventory.equippedWeapon) {
+        totalAttack += playerInventory.equippedWeapon.attack;
+    }
+    playerAttackElement.textContent = totalAttack;
+    
     playerExpElement.textContent = player.exp;
     playerNextExpElement.textContent = player.nextExp;
 }
@@ -167,6 +283,10 @@ function updateEnemyStatus() {
     enemyHpElement.textContent = currentEnemy.hp;
     enemyMaxHpElement.textContent = currentEnemy.maxHp;
     enemyImageElement.src = currentEnemy.imageSrc;
+    
+    // HPバーの更新
+    const hpPercentage = (currentEnemy.hp / currentEnemy.maxHp) * 100;
+    document.getElementById('enemy-hp-fill').style.width = `${hpPercentage}%`;
 }
 
 // メッセージ表示
@@ -176,32 +296,26 @@ function displayMessage(message) {
 
 // 敵の出現
 function spawnEnemy() {
-    // プレイヤーのレベルに応じて敵の出現確率を変える
-    let enemyPool;
+    const currentStage = getCurrentStage();
+    const enemyType = generateEnemyForStage(currentStage);
     
-    if (player.level >= 10) {
-        // レベル10以上: すべての敵が出現
-        enemyPool = enemyTypes;
-    } else if (player.level >= 5) {
-        // レベル5以上: スライムとレッドスライム
-        enemyPool = [enemyTypes[0], enemyTypes[1]];
-    } else {
-        // レベル5未満: スライムのみ
-        enemyPool = [enemyTypes[0]];
+    if (!enemyType || !enemyTypes[enemyType]) {
+        console.error("敵の種類が見つかりません:", enemyType);
+        return;
     }
     
-    // ランダムに敵を選択
-    const randomIndex = Math.floor(Math.random() * enemyPool.length);
-    const selectedEnemy = enemyPool[randomIndex];
+    // 敵のインスタンスを作成
+    currentEnemy = enemyTypes[enemyType].constructor(currentStage.level);
     
-    // 敵のインスタンスを作成（ディープコピー）
-    currentEnemy = new Enemy(
-        selectedEnemy.name,
-        selectedEnemy.maxHp,
-        selectedEnemy.attack,
-        selectedEnemy.exp,
-        selectedEnemy.imageSrc
-    );
+    // 敵の登場アニメーション
+    enemyContainer.style.opacity = "0";
+    setTimeout(() => {
+        enemyContainer.style.opacity = "1";
+        enemyContainer.classList.add('flash');
+        setTimeout(() => {
+            enemyContainer.classList.remove('flash');
+        }, 500);
+    }, 300);
     
     updateEnemyStatus();
     displayMessage(`${currentEnemy.name}が現れた！画面をタップして攻撃！`);
@@ -216,31 +330,361 @@ function enemyAttack() {
 
 // 敵を倒した時の処理
 function handleEnemyDefeat() {
+    // 敵の死亡アニメーション
+    enemyContainer.classList.add('enemy-death');
+    
     setTimeout(() => {
+        enemyContainer.classList.remove('enemy-death');
+        
+        // 経験値獲得
         displayMessage(`${currentEnemy.name}を倒した！${currentEnemy.exp}の経験値を獲得！`);
         player.gainExp(currentEnemy.exp);
+        
+        // アイテムドロップ処理
+        handleItemDrop(currentEnemy.level);
         
         // 少し待ってから次の敵を出現させる
         setTimeout(spawnEnemy, 1500);
     }, 500);
 }
 
+// アイテムドロップ処理
+function handleItemDrop(enemyLevel) {
+    // items.jsからインポートした関数を使用
+    import('./items.js').then(({ calculateDrops }) => {
+        const droppedItem = calculateDrops(enemyLevel);
+        
+        if (droppedItem) {
+            // アイテムドロップウィンドウを表示
+            const itemDropWindow = document.getElementById('item-drop-window');
+            const droppedItemImg = document.getElementById('dropped-item-img');
+            const droppedItemName = document.getElementById('dropped-item-name');
+            const droppedItemDesc = document.getElementById('dropped-item-description');
+            
+            droppedItemImg.src = droppedItem.imgSrc;
+            droppedItemName.textContent = droppedItem.name;
+            droppedItemDesc.textContent = droppedItem.description;
+            
+            itemDropWindow.classList.remove('hidden');
+            
+            // 拾うボタンのイベントリスナー
+            document.getElementById('pickup-item').onclick = () => {
+                playerInventory.addItem(droppedItem);
+                itemDropWindow.classList.add('hidden');
+                
+                // アイテム獲得エフェクト
+                const rect = droppedItemImg.getBoundingClientRect();
+                effectManager.createItemEffect(
+                    rect.left + rect.width / 2, 
+                    rect.top + rect.height / 2, 
+                    document.getElementById('effect-container')
+                );
+                
+                displayMessage(`${droppedItem.name}を手に入れた！`);
+            };
+        }
+    });
+}
+
+// インベントリ関連の処理
+function initInventory() {
+    // インベントリボタンのイベントリスナー
+    document.getElementById('inventory-btn').addEventListener('click', openInventory);
+    
+    // インベントリを閉じるボタン
+    document.getElementById('close-inventory').addEventListener('click', () => {
+        document.getElementById('inventory-window').classList.add('hidden');
+    });
+    
+    // タブ切り替え
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            // アクティブなタブを全て非アクティブにする
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // クリックされたタブをアクティブにする
+            e.target.classList.add('active');
+            const tabId = e.target.getAttribute('data-tab');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            
+            // タブの内容を更新
+            updateInventoryTab(tabId);
+        });
+    });
+}
+
+// インベントリを開く
+function openInventory() {
+    document.getElementById('inventory-window').classList.remove('hidden');
+    
+    // 最初のタブを更新
+    updateInventoryTab('weapons');
+}
+
+// タブの内容を更新
+function updateInventoryTab(tabId) {
+    const listElement = document.getElementById(`${tabId}-list`);
+    listElement.innerHTML = '';
+    
+    let items;
+    let equippedItem;
+    
+    switch(tabId) {
+        case 'weapons':
+            items = playerInventory.weapons;
+            equippedItem = playerInventory.equippedWeapon;
+            document.getElementById('equipped-weapon').textContent = equippedItem ? equippedItem.name : 'なし';
+            break;
+        case 'shields':
+            items = playerInventory.shields;
+            equippedItem = playerInventory.equippedShield;
+            document.getElementById('equipped-shield').textContent = equippedItem ? equippedItem.name : 'なし';
+            break;
+        case 'armors':
+            items = playerInventory.armors;
+            equippedItem = playerInventory.equippedArmor;
+            document.getElementById('equipped-armor').textContent = equippedItem ? equippedItem.name : 'なし';
+            break;
+        case 'consumables':
+            items = playerInventory.consumables;
+            break;
+        case 'valuables':
+            items = [...playerInventory.valuables, ...playerInventory.keys];
+            break;
+    }
+    
+    items.forEach(item => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-card';
+        
+        // 装備中のアイテムにはクラスを追加
+        if (equippedItem && item.id === equippedItem.id) {
+            itemCard.classList.add('equipped');
+        }
+        
+        const itemImg = document.createElement('img');
+        itemImg.src = item.imgSrc;
+        itemImg.alt = item.name;
+        
+        const itemName = document.createElement('h5');
+        itemName.textContent = item.name;
+        
+        const itemRarity = document.createElement('div');
+        itemRarity.className = `item-rarity rarity-${item.rarity}`;
+        itemRarity.textContent = getRarityText(item.rarity);
+        
+        itemCard.appendChild(itemImg);
+        itemCard.appendChild(itemName);
+        itemCard.appendChild(itemRarity);
+        
+        // アイテムクリックイベント
+        itemCard.addEventListener('click', () => {
+            handleItemClick(item, tabId);
+        });
+        
+        listElement.appendChild(itemCard);
+    });
+}
+
+// レアリティテキストを取得
+function getRarityText(rarity) {
+    switch(rarity) {
+        case 1: return 'コモン';
+        case 2: return 'アンコモン';
+        case 3: return 'レア';
+        case 4: return 'エピック';
+        case 5: return 'レジェンダリー';
+        default: return '';
+    }
+}
+
+// アイテムクリック処理
+function handleItemClick(item, tabId) {
+    switch(tabId) {
+        case 'weapons':
+            playerInventory.equipWeapon(item.id);
+            break;
+        case 'shields':
+            playerInventory.equipShield(item.id);
+            break;
+        case 'armors':
+            playerInventory.equipArmor(item.id);
+            break;
+        case 'consumables':
+            useConsumable(item);
+            break;
+        case 'valuables':
+            if (item.isKey) {
+                // 鍵の場合は何もしない
+            } else {
+                useValuable(item);
+            }
+            break;
+    }
+    
+    // ステータスとインベントリを更新
+    updatePlayerStatus();
+    updateInventoryTab(tabId);
+}
+
+// 消費アイテムを使用
+function useConsumable(item) {
+    const usedItem = playerInventory.useConsumable(item.id);
+    
+    if (usedItem) {
+        switch(usedItem.effect) {
+            case 'heal':
+                player.hp = Math.min(player.maxHp, player.hp + usedItem.value);
+                displayMessage(`${usedItem.name}を使用して${usedItem.value}ポイント回復した！`);
+                break;
+            case 'attack_boost':
+                // 一時的な攻撃力アップ処理（実装省略）
+                displayMessage(`${usedItem.name}を使用して攻撃力が上昇した！`);
+                break;
+            case 'defense_boost':
+                // 一時的な防御力アップ処理（実装省略）
+                displayMessage(`${usedItem.name}を使用して防御力が上昇した！`);
+                break;
+        }
+        
+        updatePlayerStatus();
+    }
+}
+
+// 貴重品を使用
+function useValuable(item) {
+    const usedItem = playerInventory.useValuable(item.id);
+    
+    if (usedItem) {
+        switch(usedItem.effect) {
+            case 'permanent_hp':
+                player.maxHp += usedItem.value;
+                player.hp += usedItem.value;
+                displayMessage(`${usedItem.name}を使用して最大HPが${usedItem.value}増加した！`);
+                break;
+            case 'permanent_attack':
+                player.attack += usedItem.value;
+                displayMessage(`${usedItem.name}を使用して攻撃力が${usedItem.value}増加した！`);
+                break;
+            case 'permanent_defense':
+                // 防御力が永続的に上昇（実装省略）
+                displayMessage(`${usedItem.name}を使用して防御力が上昇した！`);
+                break;
+            case 'permanent_crit':
+                // クリティカル率が永続的に上昇（実装省略）
+                displayMessage(`${usedItem.name}を使用してクリティカル率が上昇した！`);
+                break;
+        }
+        
+        updatePlayerStatus();
+    }
+}
+
+// ステージ選択ウィンドウの初期化
+function initStageSelect() {
+    // 閉じるボタン
+    document.getElementById('close-stage').addEventListener('click', () => {
+        document.getElementById('stage-window').classList.add('hidden');
+    });
+    
+    // ステージ名クリックでステージ選択ウィンドウを開く
+    document.getElementById('stage-name').addEventListener('click', openStageSelect);
+}
+
+// ステージ選択ウィンドウを開く
+function openStageSelect() {
+    document.getElementById('stage-window').classList.remove('hidden');
+    updateStageList();
+}
+
+// ステージリストの更新
+function updateStageList() {
+    import('./stages.js').then(({ stages, getCurrentStage }) => {
+        const stagesList = document.getElementById('stages-list');
+        stagesList.innerHTML = '';
+        
+        const currentStage = getCurrentStage();
+        
+        stages.forEach(stage => {
+            const stageCard = document.createElement('div');
+            stageCard.className = 'stage-card';
+            
+            // 完了したステージにはクラスを追加
+            if (stage.completed) {
+                stageCard.classList.add('stage-completed');
+            }
+            
+            // 現在のステージにはクラスを追加
+            if (currentStage.id === stage.id) {
+                stageCard.classList.add('current-stage');
+            }
+            
+            // 鍵が必要なステージでまだ開放されていない場合
+            if (stage.requiredKeyLevel > 0 && !stage.completed && !playerInventory.hasKey(stage.requiredKeyLevel)) {
+                stageCard.classList.add('stage-locked');
+            }
+            
+            const stageName = document.createElement('h4');
+            stageName.textContent = stage.name;
+            
+            const stageDesc = document.createElement('p');
+            stageDesc.textContent = stage.description;
+            
+            const stageDifficulty = document.createElement('p');
+            stageDifficulty.textContent = `難易度: ${stage.level}`;
+            
+            stageCard.appendChild(stageName);
+            stageCard.appendChild(stageDesc);
+            stageCard.appendChild(stageDifficulty);
+            
+            // ステージクリックイベント
+            stageCard.addEventListener('click', () => {
+                // ロックされていないステージのみ選択可能
+                if (!stageCard.classList.contains('stage-locked')) {
+                    selectStage(stage.id);
+                    document.getElementById('stage-window').classList.add('hidden');
+                }
+            });
+            
+            stagesList.appendChild(stageCard);
+        });
+    });
+}
+
+// ステージ選択
+function selectStage(stageId) {
+    setStage(stageId);
+    updateStageInfo();
+    spawnEnemy();
+}
+
 // プレイヤーが倒れた時の処理
 function handlePlayerDefeat() {
-    setTimeout(() => {
-        displayMessage('あなたは倒れてしまった...');
-        attackButton.disabled = true;
-        healButton.disabled = true;
+    // ゲームオーバーウィンドウを表示
+    document.getElementById('game-over-window').classList.remove('hidden');
+    
+    // リスタートボタンのイベントリスナー
+    document.getElementById('restart-game').onclick = () => {
+        // 前のステージに戻る
+        returnToPreviousStage();
         
-        // リスタートボタンを作成
-        const restartButton = document.createElement('button');
-        restartButton.textContent = 'リスタート';
-        restartButton.addEventListener('click', () => {
-            restartGame();
-            document.getElementById('action-buttons').removeChild(restartButton);
-        });
-        document.getElementById('action-buttons').appendChild(restartButton);
-    }, 1000);
+        // プレイヤーを回復
+        player.hp = player.maxHp;
+        updatePlayerStatus();
+        
+        // 新しい敵を出現
+        updateStageInfo();
+        spawnEnemy();
+        
+        // ゲームオーバーウィンドウを閉じる
+        document.getElementById('game-over-window').classList.add('hidden');
+    };
 }
 
 // ゲームのリスタート
@@ -293,6 +737,17 @@ function initGame() {
     // ブラウザのサイズ調整
     adjustForMobile();
     window.addEventListener('resize', adjustForMobile);
+    
+    // インベントリとステージ選択の初期化
+    initInventory();
+    initStageSelect();
+    
+    // ステージ情報の更新
+    updateStageInfo();
+    
+    // エフェクトの初期化
+    effectManager.registerEffect('shake', 'shake', 500, document.getElementById('game-field'));
+    effectManager.registerEffect('flash', 'flash', 500, document.getElementById('enemy-container'));
     
     // ゲーム開始
     updatePlayerStatus();
