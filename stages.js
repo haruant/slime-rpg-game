@@ -60,6 +60,42 @@ const stages = [
         'images/backgrounds/castle.svg',
         ['red_slime', 'king_slime'], // 強いスライムのみ
         3, // 金の鍵が必要
+        'stage5'
+    ),
+    
+    // 第5ステージ（隠された鉱山）
+    new Stage(
+        'stage5',
+        '隠された鉱山',
+        'メタルスライムが出現する鉱山。貴重な経験値を得られる。',
+        20,
+        'images/backgrounds/mine.svg',
+        ['red_slime', 'metal_slime', 'king_slime'],
+        3, // 金の鍵が必要
+        'stage6'
+    ),
+    
+    // 第6ステージ（毒の沼地）
+    new Stage(
+        'stage6',
+        '毒の沼地',
+        'ポイズンスライムが生息する危険な沼地。',
+        25,
+        'images/backgrounds/swamp.svg',
+        ['poison_slime', 'king_slime', 'metal_slime'],
+        3, // 金の鍵が必要
+        'stage7'
+    ),
+    
+    // 第7ステージ（古代遺跡）
+    new Stage(
+        'stage7',
+        '古代遺跡',
+        '最強のエンシェントスライムとクリスタルスライムが出現する最終試練の場。',
+        30,
+        'images/backgrounds/ruins.svg',
+        ['crystal_slime', 'ancient_slime'],
+        3, // 金の鍵が必要
         null // 最終ステージ
     )
 ];

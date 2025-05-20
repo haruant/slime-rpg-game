@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <!-- 背景（曇り空） -->
+    <rect x="0" y="0" width="800" height="400" fill="#334433" />
+    
+    <!-- 沼の水 -->
+    <path d="M0 300 L800 300 L800 400 L0 400 Z" fill="#225533" />
+    
+    <!-- 気泡 -->
+    <circle cx="150" cy="320" r="5" fill="#88aa99" opacity="0.5" />
+    <circle cx="300" cy="350" r="8" fill="#88aa99" opacity="0.4" />
+    <circle cx="450" cy="330" r="6" fill="#88aa99" opacity="0.6" />
+    <circle cx="600" cy="340" r="7" fill="#88aa99" opacity="0.3" />
+    
+    <!-- 枯れ木 -->
+    <path d="M200 300 L200 200 L170 150 L180 140 L150 120" stroke="#664422" stroke-width="8" fill="none" />
+    <path d="M200 250 L230 220" stroke="#664422" stroke-width="6" fill="none" />
+    <path d="M200 220 L180 190" stroke="#664422" stroke-width="6" fill="none" />
+    
+    <path d="M600 300 L600 220 L570 180" stroke="#664422" stroke-width="8" fill="none" />
+    <path d="M600 260 L630 230" stroke="#664422" stroke-width="6" fill="none" />
+    <path d="M600 240 L580 200" stroke="#664422" stroke-width="6" fill="none" />
+    
+    <!-- 霧 -->
+    <rect x="0" y="250" width="800" height="50" fill="#aabbaa" opacity="0.2" />
+  </g>
+</svg> 

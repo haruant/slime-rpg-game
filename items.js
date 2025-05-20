@@ -186,85 +186,79 @@ const valuables = [
 
 // アイテムのドロップ確率計算
 function calculateDrops(enemyLevel) {
-    // 基本ドロップ率
-    const dropRates = {
-        key: 0.05,       // 5%
-        consumable: 0.6, // 60%
-        weapon: 0.15,    // 15%
-        shield: 0.15     // 15%
-    };
+    // ドロップ確率をレベルに基づいて調整
+    const dropChance = 0.6 + (enemyLevel * 0.02); // 基本60%、レベルごとに2%上昇、上限95%
+    const finalDropChance = Math.min(0.95, dropChance);
     
-    // ドロップするアイテムを決定
-    const roll = Math.random();
-    let itemType;
+    // ドロップするかの判定
+    if (Math.random() > finalDropChance) {
+        return null; // ドロップなし
+    }
     
-    if (roll < dropRates.key) {
-        itemType = 'key';
-    } else if (roll < dropRates.key + dropRates.consumable) {
-        itemType = 'consumable';
-    } else if (roll < dropRates.key + dropRates.consumable + dropRates.weapon) {
-        itemType = 'weapon';
+    // 敵のレベルに基づいてレアリティの上限を決定
+    let maxRarity;
+    if (enemyLevel >= 25) maxRarity = 5;      // レベル25以上: レジェンダリーまで
+    else if (enemyLevel >= 15) maxRarity = 4; // レベル15以上: エピックまで
+    else if (enemyLevel >= 8) maxRarity = 3;  // レベル8以上: レアまで
+    else if (enemyLevel >= 3) maxRarity = 2;  // レベル3以上: アンコモンまで
+    else maxRarity = 1;                       // レベル3未満: コモンのみ
+    
+    // レアリティの決定（高レベルほど高レアリティが出やすい）
+    let rarityRoll = Math.random();
+    let selectedRarity;
+    
+    if (rarityRoll < 0.5) {
+        // 50%: 基本レアリティ（敵レベルによって変動）
+        selectedRarity = 1 + Math.floor(Math.random() * Math.min(2, maxRarity));
+    } else if (rarityRoll < 0.85) {
+        // 35%: 中間レアリティ
+        selectedRarity = Math.min(maxRarity, 2 + Math.floor(Math.random() * 2));
     } else {
-        itemType = 'shield';
+        // 15%: 最高レアリティ（低確率）
+        selectedRarity = Math.min(maxRarity, 3 + Math.floor(Math.random() * 3));
     }
     
-    // レアリティの決定（敵レベルに基づく）
-    // レア度が上がるごとに確率が下がる
-    let rarityChances;
+    // 特定の敵タイプによるボーナス（後で実装）
     
-    if (enemyLevel < 5) {
-        rarityChances = [0.7, 0.25, 0.04, 0.009, 0.001]; // レアリティ1: 70%, 2: 25%, 3: 4%, 4: 0.9%, 5: 0.1%
-    } else if (enemyLevel < 10) {
-        rarityChances = [0.5, 0.35, 0.1, 0.04, 0.01]; // レアリティ1: 50%, 2: 35%, 3: 10%, 4: 4%, 5: 1%
-    } else if (enemyLevel < 15) {
-        rarityChances = [0.3, 0.4, 0.2, 0.08, 0.02]; // レアリティ1: 30%, 2: 40%, 3: 20%, 4: 8%, 5: 2%
-    } else {
-        rarityChances = [0.2, 0.3, 0.3, 0.15, 0.05]; // レアリティ1: 20%, 2: 30%, 3: 30%, 4: 15%, 5: 5%
-    }
+    // アイテムタイプの決定
+    const typeRoll = Math.random();
     
-    const rarityRoll = Math.random();
-    let rarity = 1;
-    let sum = 0;
+    // アイテムタイプの確率配分
+    // 5%: 鍵アイテム（特に高レベル敵から）
+    // 30%: 消費アイテム/貴重品
+    // 35%: 武器
+    // 30%: 盾/防具
+    let selectedType, selectedPool;
     
-    for (let i = 0; i < rarityChances.length; i++) {
-        sum += rarityChances[i];
-        if (rarityRoll < sum) {
-            rarity = i + 1;
-            break;
-        }
-    }
-    
-    // アイテムの選択
-    let itemPool = [];
-    
-    if (itemType === 'key') {
-        // 鍵の選択（ステージに応じた鍵）
+    if (typeRoll < 0.05 && enemyLevel >= 10) {
+        // 鍵アイテム（レベル10以上の敵のみ）
         const keyLevel = Math.min(Math.ceil(enemyLevel / 10), 3);
         return valuables.find(v => v.isKey && v.value === keyLevel);
-    } else if (itemType === 'consumable') {
-        // 消費アイテムまたは貴重品（鍵以外）
+    } else if (typeRoll < 0.35) {
+        // 消費アイテムまたは貴重品
         if (Math.random() < 0.8) {
-            itemPool = consumables.filter(c => c.rarity <= rarity);
+            selectedPool = consumables.filter(c => c.rarity <= selectedRarity);
         } else {
-            itemPool = valuables.filter(v => !v.isKey && v.rarity <= rarity);
+            selectedPool = valuables.filter(v => !v.isKey && v.rarity <= selectedRarity);
         }
-    } else if (itemType === 'weapon') {
-        itemPool = weapons.filter(w => w.rarity <= rarity);
-    } else if (itemType === 'shield') {
-        const armorOrShield = Math.random() < 0.5;
-        if (armorOrShield) {
-            itemPool = shields.filter(s => s.rarity <= rarity);
+    } else if (typeRoll < 0.70) {
+        // 武器
+        selectedPool = weapons.filter(w => w.rarity <= selectedRarity);
+    } else {
+        // 盾/防具
+        if (Math.random() < 0.5) {
+            selectedPool = shields.filter(s => s.rarity <= selectedRarity);
         } else {
-            itemPool = armors.filter(a => a.rarity <= rarity);
+            selectedPool = armors.filter(a => a.rarity <= selectedRarity);
         }
     }
     
     // アイテムプールから選択
-    if (itemPool.length > 0) {
-        return itemPool[Math.floor(Math.random() * itemPool.length)];
+    if (selectedPool && selectedPool.length > 0) {
+        return selectedPool[Math.floor(Math.random() * selectedPool.length)];
     }
     
-    // デフォルトでは薬草を返す
+    // フォールバック（何も選択されなかった場合は薬草）
     return consumables[0];
 }
 

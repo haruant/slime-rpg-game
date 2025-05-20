@@ -1,12 +1,22 @@
-# OS specific files
+# システムファイル
 .DS_Store
 Thumbs.db
 
-# IDE files
-.idea/
+# エディタの設定ファイル
 .vscode/
+.idea/
 *.sublime-project
 *.sublime-workspace
 
-# Node modules
-node_modules/ 
+# 一時ファイル
+*.log
+*.tmp
+tmp/
+temp/
+
+# npm
+node_modules/
+package-lock.json
+
+# その他
+.env 

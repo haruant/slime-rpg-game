@@ -56,6 +56,27 @@
                 <button id="heal-btn">回復</button>
                 <button id="inventory-btn">アイテム</button>
                 <button id="stage-select-btn">ステージ</button>
+                <button id="save-load-btn">セーブ/ロード</button>
+            </div>
+        </div>
+        
+        <!-- セーブ/ロードウィンドウ -->
+        <div id="save-load-window" class="game-window hidden">
+            <div class="window-header">
+                <h3>セーブ / ロード</h3>
+                <button id="close-save-load">×</button>
+            </div>
+            <div class="window-content">
+                <div class="save-load-controls">
+                    <button id="save-game-btn" class="primary-btn">セーブする</button>
+                    <button id="load-game-btn" class="primary-btn">ロードする</button>
+                    <button id="delete-save-btn" class="danger-btn">セーブデータを削除</button>
+                </div>
+                <div id="save-info">
+                    <p>最終セーブ日時: <span id="save-date">なし</span></p>
+                    <p>プレイヤーLv: <span id="save-player-level">-</span></p>
+                    <p>ステージ: <span id="save-stage">-</span></p>
+                </div>
             </div>
         </div>
         

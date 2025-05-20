@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <!-- 背景 -->
+    <rect x="0" y="0" width="800" height="400" fill="#222233" />
+    
+    <!-- 岩壁のパターン -->
+    <path d="M0 100 L100 120 L200 90 L300 130 L400 100 L500 110 L600 80 L700 120 L800 90 L800 400 L0 400 Z" fill="#444455" />
+    
+    <!-- 床のパターン -->
+    <path d="M0 300 L100 310 L200 290 L300 320 L400 300 L500 310 L600 290 L700 320 L800 300 L800 400 L0 400 Z" fill="#333344" />
+    
+    <!-- 鉱石のキラキラ -->
+    <circle cx="150" cy="200" r="3" fill="#ffff88" />
+    <circle cx="300" cy="180" r="2" fill="#aaddff" />
+    <circle cx="450" cy="220" r="4" fill="#ffaaff" />
+    <circle cx="600" cy="150" r="3" fill="#aaffaa" />
+    <circle cx="700" cy="250" r="2" fill="#ffccdd" />
+    
+    <!-- 線路 -->
+    <rect x="100" y="320" width="600" height="5" fill="#886655" />
+    <rect x="100" y="330" width="600" height="5" fill="#886655" />
+    
+    <!-- 線路の枕木 -->
+    <rect x="150" y="320" width="10" height="15" fill="#553311" />
+    <rect x="250" y="320" width="10" height="15" fill="#553311" />
+    <rect x="350" y="320" width="10" height="15" fill="#553311" />
+    <rect x="450" y="320" width="10" height="15" fill="#553311" />
+    <rect x="550" y="320" width="10" height="15" fill="#553311" />
+    <rect x="650" y="320" width="10" height="15" fill="#553311" />
+  </g>
+</svg> 

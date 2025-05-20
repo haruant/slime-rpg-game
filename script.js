@@ -2,6 +2,7 @@
 import { playerInventory, calculateDrops } from './items.js';
 import { getCurrentStage, generateEnemyForStage, returnToPreviousStage, advanceToNextStage, setStage, stages } from './stages.js';
 import { effectManager } from './effects.js';
+import { saveGame, loadGame, deleteSaveData, hasSaveData, getSaveDateTime } from './save.js';
 
 // プレイヤーのステータス
 const player = {
@@ -225,6 +226,46 @@ const enemyTypes = {
             "images/king_slime.svg",
             level
         )
+    },
+    "metal_slime": {
+        constructor: (level) => new Enemy(
+            "メタルスライム", 
+            100 + level * 10, 
+            5 + level, 
+            300 + level * 20, 
+            "images/metal_slime.svg",
+            level
+        )
+    },
+    "poison_slime": {
+        constructor: (level) => new Enemy(
+            "ポイズンスライム", 
+            120 + level * 12, 
+            12 + level * 2, 
+            50 + level * 4, 
+            "images/poison_slime.svg",
+            level
+        )
+    },
+    "crystal_slime": {
+        constructor: (level) => new Enemy(
+            "クリスタルスライム", 
+            200 + level * 18, 
+            10 + level * 2, 
+            80 + level * 6, 
+            "images/crystal_slime.svg",
+            level
+        )
+    },
+    "ancient_slime": {
+        constructor: (level) => new Enemy(
+            "エンシェントスライム", 
+            300 + level * 25, 
+            20 + level * 4, 
+            150 + level * 10, 
+            "images/ancient_slime.svg",
+            level
+        )
     }
 };
 
@@ -350,46 +391,43 @@ function handleEnemyDefeat() {
 
 // アイテムドロップ処理
 function handleItemDrop(enemyLevel) {
-    // 簡素なドロップ率計算 (敵のレベルが高いほどドロップ率が上がる)
-    const dropRate = 0.3 + (enemyLevel * 0.01); // 基本30%にレベルごとに1%ずつ上昇
+    // calculateDrops関数を使用してドロップアイテムを決定
+    const droppedItem = calculateDrops(enemyLevel);
     
-    if (Math.random() > dropRate) {
-        // ドロップなし
+    // ドロップなしの場合は処理終了
+    if (!droppedItem) {
         return;
     }
     
-    // アイテムドロップ - 直接items.jsからimportせずに同期的に処理
-    const droppedItem = calculateDrops(enemyLevel);
+    console.log(`ドロップしたアイテム: ${droppedItem.name} (レア度: ${droppedItem.rarity})`);
     
-    if (droppedItem) {
-        // アイテムドロップウィンドウを表示
-        const itemDropWindow = document.getElementById('item-drop-window');
-        const droppedItemImg = document.getElementById('dropped-item-img');
-        const droppedItemName = document.getElementById('dropped-item-name');
-        const droppedItemDesc = document.getElementById('dropped-item-description');
+    // アイテムドロップウィンドウを表示
+    const itemDropWindow = document.getElementById('item-drop-window');
+    const droppedItemImg = document.getElementById('dropped-item-img');
+    const droppedItemName = document.getElementById('dropped-item-name');
+    const droppedItemDesc = document.getElementById('dropped-item-description');
+    
+    droppedItemImg.src = droppedItem.imgSrc;
+    droppedItemName.textContent = droppedItem.name;
+    droppedItemDesc.textContent = droppedItem.description;
+    
+    itemDropWindow.classList.remove('hidden');
+    
+    // 拾うボタンのイベントリスナー
+    document.getElementById('pickup-item').onclick = () => {
+        playerInventory.addItem(droppedItem);
+        itemDropWindow.classList.add('hidden');
         
-        droppedItemImg.src = droppedItem.imgSrc;
-        droppedItemName.textContent = droppedItem.name;
-        droppedItemDesc.textContent = droppedItem.description;
+        // アイテム獲得エフェクト
+        const rect = droppedItemImg.getBoundingClientRect();
+        effectManager.createItemEffect(
+            rect.left + rect.width / 2, 
+            rect.top + rect.height / 2, 
+            document.getElementById('effect-container')
+        );
         
-        itemDropWindow.classList.remove('hidden');
-        
-        // 拾うボタンのイベントリスナー
-        document.getElementById('pickup-item').onclick = () => {
-            playerInventory.addItem(droppedItem);
-            itemDropWindow.classList.add('hidden');
-            
-            // アイテム獲得エフェクト
-            const rect = droppedItemImg.getBoundingClientRect();
-            effectManager.createItemEffect(
-                rect.left + rect.width / 2, 
-                rect.top + rect.height / 2, 
-                document.getElementById('effect-container')
-            );
-            
-            displayMessage(`${droppedItem.name}を手に入れた！`);
-        };
-    }
+        displayMessage(`${droppedItem.name}を手に入れた！`);
+    };
 }
 
 // インベントリ関連の処理
@@ -857,6 +895,130 @@ healButton.addEventListener('click', () => {
     }, 1000);
 });
 
+// セーブ/ロード機能の初期化
+function initSaveLoad() {
+    // セーブ/ロードボタンのイベントハンドラ
+    document.getElementById('save-load-btn').addEventListener('click', openSaveLoadWindow);
+    
+    // 閉じるボタンのイベントハンドラ
+    document.getElementById('close-save-load').addEventListener('click', () => {
+        document.getElementById('save-load-window').classList.add('hidden');
+    });
+    
+    // セーブボタンのイベントハンドラ
+    document.getElementById('save-game-btn').addEventListener('click', () => {
+        saveCurrentGame();
+        updateSaveInfo();
+    });
+    
+    // ロードボタンのイベントハンドラ
+    document.getElementById('load-game-btn').addEventListener('click', () => {
+        loadSavedGame();
+        document.getElementById('save-load-window').classList.add('hidden');
+    });
+    
+    // 削除ボタンのイベントハンドラ
+    document.getElementById('delete-save-btn').addEventListener('click', () => {
+        if (confirm('セーブデータを削除しますか？この操作は元に戻せません。')) {
+            deleteSaveData();
+            updateSaveInfo();
+        }
+    });
+    
+    // 初期表示時にセーブ情報を更新
+    updateSaveInfo();
+}
+
+// セーブ/ロードウィンドウを開く
+function openSaveLoadWindow() {
+    document.getElementById('save-load-window').classList.remove('hidden');
+    updateSaveInfo();
+}
+
+// 現在のゲーム状態をセーブ
+function saveCurrentGame() {
+    if (saveGame(player, playerInventory, currentStageId, stages)) {
+        displayMessage('ゲームをセーブしました！');
+    } else {
+        displayMessage('セーブに失敗しました...');
+    }
+}
+
+// セーブしたゲームをロード
+function loadSavedGame() {
+    const saveData = loadGame();
+    if (!saveData) {
+        displayMessage('ロードするセーブデータがありません');
+        return false;
+    }
+    
+    try {
+        // プレイヤーデータの復元
+        player.level = saveData.player.level;
+        player.maxHp = saveData.player.maxHp;
+        player.hp = saveData.player.hp;
+        player.attack = saveData.player.attack;
+        player.exp = saveData.player.exp;
+        player.nextExp = saveData.player.nextExp;
+        
+        // ステージ情報の復元
+        currentStageId = saveData.currentStageId;
+        
+        // 完了したステージの復元
+        stages.forEach(stage => {
+            stage.completed = saveData.completedStages.includes(stage.id);
+        });
+        
+        // インベントリの復元処理（簡易版）
+        // 注: 実際の実装では、アイテムIDから実際のアイテムオブジェクトを取得する必要があります
+        
+        // ゲーム状態の更新
+        updatePlayerStatus();
+        updateStageInfo();
+        spawnEnemy();
+        
+        displayMessage('ゲームをロードしました！');
+        return true;
+    } catch (error) {
+        console.error('ゲームデータのロード中にエラーが発生しました:', error);
+        displayMessage('ロードに失敗しました...');
+        return false;
+    }
+}
+
+// セーブ情報の表示を更新
+function updateSaveInfo() {
+    const saveDate = document.getElementById('save-date');
+    const savePlayerLevel = document.getElementById('save-player-level');
+    const saveStage = document.getElementById('save-stage');
+    
+    if (hasSaveData()) {
+        const saveDateTime = getSaveDateTime();
+        const saveData = loadGame();
+        
+        if (saveDateTime && saveData) {
+            saveDate.textContent = saveDateTime.toLocaleString();
+            savePlayerLevel.textContent = saveData.player.level;
+            
+            // ステージ名を取得
+            const stageName = stages.find(stage => stage.id === saveData.currentStageId)?.name || '不明';
+            saveStage.textContent = stageName;
+            
+            // ロードボタンを有効化
+            document.getElementById('load-game-btn').disabled = false;
+            document.getElementById('delete-save-btn').disabled = false;
+        }
+    } else {
+        saveDate.textContent = 'なし';
+        savePlayerLevel.textContent = '-';
+        saveStage.textContent = '-';
+        
+        // ロードボタンを無効化
+        document.getElementById('load-game-btn').disabled = true;
+        document.getElementById('delete-save-btn').disabled = true;
+    }
+}
+
 // ゲーム初期化
 function initGame() {
     // ブラウザのサイズ調整
@@ -866,6 +1028,9 @@ function initGame() {
     // インベントリとステージ選択の初期化
     initInventory();
     initStageSelect();
+    
+    // セーブ/ロード機能の初期化
+    initSaveLoad();
     
     // ステージ情報の更新
     updateStageInfo();

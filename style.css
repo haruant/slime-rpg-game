@@ -721,4 +721,66 @@ button:disabled {
 
 .key-used {
     animation: keyUsed 1s forwards;
+}
+
+/* セーブ/ロードウィンドウのスタイル */
+#save-load-window {
+    max-width: 400px;
+}
+
+.save-load-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.primary-btn {
+    background-color: #4a8fe7;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.primary-btn:hover {
+    background-color: #3a7fd7;
+}
+
+.danger-btn {
+    background-color: #e74a4a;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.danger-btn:hover {
+    background-color: #d73a3a;
+}
+
+#save-info {
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+#save-info p {
+    margin: 5px 0;
+}
+
+/* 新しいボタンのスタイル */
+#save-load-btn {
+    background-color: #4a8fe7;
+    color: white;
+}
+
+#save-load-btn:hover {
+    background-color: #3a7fd7;
 } 

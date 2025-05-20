@@ -1,25 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="70" height="120" viewBox="0 0 70 120">
-  <!-- 頭 -->
-  <circle cx="35" cy="25" r="20" fill="#FFD3B4" stroke="#333" stroke-width="2"/>
-  
-  <!-- 目 -->
-  <circle cx="28" cy="20" r="3" fill="#333"/>
-  <circle cx="42" cy="20" r="3" fill="#333"/>
-  
-  <!-- 口 -->
-  <path d="M30,32 Q35,36 40,32" stroke="#333" stroke-width="1.5" fill="none"/>
-  
-  <!-- 髪 -->
-  <path d="M20,10 Q35,-5 50,10" stroke="#333" stroke-width="2" fill="#8B4513"/>
-  
-  <!-- 体 -->
-  <rect x="25" y="45" width="20" height="40" fill="#3498DB" stroke="#333" stroke-width="2" rx="2"/>
-  
-  <!-- 腕 -->
-  <rect x="15" y="50" width="10" height="30" fill="#FFD3B4" stroke="#333" stroke-width="1.5" rx="5"/>
-  <rect x="45" y="50" width="10" height="30" fill="#FFD3B4" stroke="#333" stroke-width="1.5" rx="5"/>
-  
-  <!-- 足 -->
-  <rect x="25" y="85" width="8" height="30" fill="#2C3E50" stroke="#333" stroke-width="1.5" rx="2"/>
-  <rect x="37" y="85" width="8" height="30" fill="#2C3E50" stroke="#333" stroke-width="1.5" rx="2"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="200" viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <!-- 体 -->
+    <rect x="35" y="80" width="30" height="70" fill="#3366cc" />
+    
+    <!-- 頭 -->
+    <circle cx="50" cy="50" r="30" fill="#ffccaa" />
+    
+    <!-- 目 -->
+    <circle cx="40" cy="45" r="4" fill="#000" />
+    <circle cx="60" cy="45" r="4" fill="#000" />
+    
+    <!-- 口 -->
+    <path d="M40 60 Q50 70 60 60" stroke="#000" stroke-width="2" fill="none" />
+    
+    <!-- 腕 -->
+    <rect x="15" y="85" width="20" height="10" fill="#ffccaa" />
+    <rect x="65" y="85" width="20" height="10" fill="#ffccaa" />
+    
+    <!-- 足 -->
+    <rect x="35" y="150" width="10" height="30" fill="#663300" />
+    <rect x="55" y="150" width="10" height="30" fill="#663300" />
+  </g>
 </svg> 
